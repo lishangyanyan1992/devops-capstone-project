@@ -174,3 +174,20 @@ class TestAccountService(TestCase):
         """It should not allow an illegal method call"""
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_security_headers(self):
+        """It should return security headers"""
+        resp = self.client.get("/", environ_base={"wsgi.url_scheme": "https"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        headers = resp.headers
+        self.assertIn("X-Content-Type-Options", headers)
+        self.assertIn("X-Frame-Options", headers)
+        self.assertIn("Content-Security-Policy", headers)
+
+    def test_cors_security(self):
+        """It should return a CORS header"""
+        resp = self.client.get(
+            "/", environ_base={"wsgi.url_scheme": "https"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("Access-Control-Allow-Origin", resp.headers)
